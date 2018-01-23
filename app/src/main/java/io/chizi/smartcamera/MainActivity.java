@@ -1,11 +1,12 @@
 package io.chizi.smartcamera;
 
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.MotionEvent;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.wonderkiln.camerakit.CameraKit;
@@ -15,9 +16,8 @@ import com.wonderkiln.camerakit.CameraView;
 
 public class MainActivity extends AppCompatActivity {
 
-    CameraView camera;
-    private int cameraMethod = CameraKit.Constants.METHOD_STANDARD;
-
+    private CameraView cameraView;
+    private ImageView flashButton;
 
 
     @Override
@@ -25,18 +25,36 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        camera = (CameraView) findViewById(R.id.camera);
+        cameraView = (CameraView) findViewById(R.id.camera);
+        flashButton = (ImageView) findViewById(R.id.flashButton);
 
-        camera.setMethod(cameraMethod);
-
-
-
+        flashButton.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                switch (motionEvent.getAction()) {
+                    case MotionEvent.ACTION_UP: {
+                        if (cameraView.getFlash() == CameraKit.Constants.FLASH_OFF) {
+                            cameraView.setFlash(CameraKit.Constants.FLASH_AUTO);
+                            flashButton.setImageResource(R.drawable.ic_flash_auto);
+                        } else if (cameraView.getFlash() == CameraKit.Constants.FLASH_AUTO) {
+                            cameraView.setFlash(CameraKit.Constants.FLASH_ON);
+                            flashButton.setImageResource(R.drawable.ic_flash_on);
+                        } else {
+                            cameraView.setFlash(CameraKit.Constants.FLASH_OFF);
+                            flashButton.setImageResource(R.drawable.ic_flash_off);
+                        }
+                        break;
+                    }
+                }
+                return true;
+            }
+        });
     }
-
+    
     public void takePicture(View view) {
 //        captureStartTime = System.currentTimeMillis();
 
-        camera.captureImage(new CameraKitEventCallback<CameraKitImage>() {
+        cameraView.captureImage(new CameraKitEventCallback<CameraKitImage>() {
             @Override
             public void callback(CameraKitImage cameraKitImage) {
                 imageCaptured(cameraKitImage);
@@ -53,19 +71,18 @@ public class MainActivity extends AppCompatActivity {
         Bitmap result = BitmapFactory.decodeByteArray(jpeg, 0, jpeg.length);
         Toast.makeText(MainActivity.this, "拍照成功！", Toast.LENGTH_SHORT).show();
 
-
     }
 
 
     @Override
     protected void onResume() {
         super.onResume();
-        camera.start();
+        cameraView.start();
     }
 
     @Override
     protected void onPause() {
-        camera.stop();
+        cameraView.stop();
         super.onPause();
     }
 
